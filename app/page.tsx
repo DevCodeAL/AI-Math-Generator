@@ -26,24 +26,34 @@ export default function Home() {
   const [problemType, setProblemType] = useState<string>("Addition");
 
 
-  // Fetch History
-   const fetchHistory = async ()=>{
-          try {
-            const res = await fetch('/api/math-problem/history');
-            const data = await res.json();
-            if(data.submissions) {
-              const countCorrect = data.submissions.filter((item: History)=> item.is_correct).length;
-              setIsScore(countCorrect)
-              setIsHistory(data.submissions);
-            }
-          } catch (error) {
-              console.error(error);
-          }
-      };
 
-    useEffect(()=> {
-      fetchHistory();
-    }, []);
+ // Fetch History
+  useEffect(() => {
+  const fetchHistory = async () => {
+    if (!sessionId) return; 
+
+    try {
+      const res = await fetch(`/api/math-problem/history?session_id=${sessionId}`);
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
+
+      const data = await res.json();
+
+      if (data?.submissions) {
+        const countCorrect = data.submissions.filter(
+          (item: History) => item.is_correct
+        ).length;
+
+        setIsScore(countCorrect);
+        setIsHistory(data.submissions);
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  fetchHistory();
+}, [sessionId]);
+
 
     // Handle Clear
     const HandleClear = ()=>{
@@ -110,7 +120,6 @@ export default function Home() {
     return;
   }
   setIsLoading(true);
-  fetchHistory();
 
   try {
     const res = await fetch('/api/math-problem/submit', {
@@ -145,8 +154,6 @@ export default function Home() {
       problem_text: problem.problem_text
     };
     setIsHistory(prev => [...prev, newSubmission]);
-
-    setIsHistory(prev => [...prev, data]);
 
      // Update score
     if (data.is_correct) {
