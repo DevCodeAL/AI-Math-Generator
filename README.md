@@ -140,9 +140,64 @@ When submitting your assessment, provide:
 
 ### My Implementation:
 
-- 
-- 
-- 
+  Setup Steps
+- Set up Supabase and obtain the API URL and Anon Key.
+- Get the API key from Google Studio AI to generate math problems, feedback, etc.
+
+  Frontend Implementation
+
+  Design and Styling:
+- Implemented using Tailwind CSS for a modern SaaS design and responsive layout.
+
+  Function Implementations:
+  fetchHistory()
+- Used inside useEffect to fetch all history records using the userId stored in localStorage under user_identifier.
+- Ensures the correct history is displayed for the logged-in or anonymous user.
+
+  handleClear()
+- Clears the current states and history.
+- Removes user_identifier from localStorage using
+localStorage.removeItem("user_identifier") and remove history from ui.
+
+  showHint() 
+- Calls the API to generate AI-generated step-by-step solutions.
+
+  Other Functions:
+- submitAnswer()
+- generateProblem()
+
+  Backend Implementation
+  API Structure:
+
+  api/math-problem/route.tsx
+- Handles backend API calls to generate AI-based math problems.
+
+  api/math-problem/submit/route.tsx
+- Handles answer submissions, checks correctness, saves submissions, and generates feedback.
+
+  api/math-problem/hint/route.tsx
+- Calls the backend API to generate AI hints.
+- Install the required package:
+- npm install @google/generative-ai
+- Uses Google Generative AI with the Gemini-2.0-flash model:
+- import { GoogleGenerativeAI } from "@google/generative-ai";
+
+  api/math-problem/history/route.tsx
+- Retrieves all history records for each unique user.
+- Implements a userId stored as user_identifier in localStorage to ensure unique ownership of histories.
+
+ Challenges Faced
+- Honestly, this is my first time implementing AI-generated content in a web app. I learned quickly by reading documentation and using AI as my assistant.
+One major challenge was handling the user history. Initially, when the browser was refreshed, the history was not displayed in the UI. After deployment, I also noticed that multiple users could see each other’s histories, which was not intended.
+To fix this, I implemented a session ID approach, but the issue persisted — the history disappeared upon refresh. Eventually, I identified the cause: every new session created a new session ID, which prevented proper fetching of history.
+My final solution was to use localStorage with a unique anonymous user ID, stored in Supabase as user_identifier using:
+const userId = crypto.randomUUID();
+This ensures that each user's history remains private and persistent across sessions.
+
+Personal Reflection
+- I’m truly proud of this project because I learned something new — integrating AI Models into web applications.This experience gave me a deeper understanding of how Generative AI works and its vital role in modern web development.It inspired me to continue exploring AI integration, and I plan to use what I’ve learned in my personal projects and with my future clients.
+This milestone marks an exciting step forward in my journey as a developer.
+
 
 ## Additional Features (Optional)
 
