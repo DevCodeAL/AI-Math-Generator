@@ -40,6 +40,7 @@ export type Database = {
           is_correct: boolean
           feedback_text: string
           problem_text: string,
+          user_identifier: string,
         }
         Insert: {
           id?: string
@@ -48,6 +49,7 @@ export type Database = {
           is_correct: boolean
           feedback_text: string
           problem_text: string,
+          user_identifier: string,
         }
         Update: {
           id?: string

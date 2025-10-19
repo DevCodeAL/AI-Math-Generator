@@ -21,43 +21,40 @@ export default function Home() {
   const [solutionSteps, setIsSolutionStep] = useState<string>("");
   const [history, setIsHistory] = useState<History[]>([]);
   const [score, setIsScore] = useState<number>(0);
-  const [viewHistory, setIsViewHistory] = useState<boolean>(false);
   const [difficulty, setDifficulty] = useState<string>("Easy");
   const [problemType, setProblemType] = useState<string>("Addition");
 
 
 
  // Fetch History
-  useEffect(() => {
+ useEffect(() => {
+  const userId = localStorage.getItem('user_identifier');
+
   const fetchHistory = async () => {
-    if (!sessionId) return; 
-
     try {
-      const res = await fetch(`/api/math-problem/history?session_id=${sessionId}`);
-      if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
-
+      const res = await fetch(`/api/math-problem/history?user_identifier=${userId}`);
       const data = await res.json();
 
-      if (data?.submissions) {
-        const countCorrect = data.submissions.filter(
-          (item: History) => item.is_correct
-        ).length;
-
+      if (data.submissions) {
+        const countCorrect = data.submissions.filter((item: History) => item.is_correct).length;
         setIsScore(countCorrect);
         setIsHistory(data.submissions);
       }
     } catch (error) {
-      console.error("Error fetching history:", error);
+      console.error(error);
     }
   };
 
   fetchHistory();
-}, [sessionId]);
+}, []);
 
 
     // Handle Clear
     const HandleClear = ()=>{
-         setIsViewHistory(!viewHistory);
+          localStorage.removeItem("user_identifier");
+        // Clear state
+        setIsHistory([]);
+        setIsScore(0);
     }
 
 
@@ -121,6 +118,12 @@ export default function Home() {
   }
   setIsLoading(true);
 
+  let userId = localStorage.getItem('user_identifier');
+  if (!userId) {
+    userId = crypto.randomUUID(); // create new anonymous user id
+    localStorage.setItem('user_identifier', userId);
+  }
+
   try {
     const res = await fetch('/api/math-problem/submit', {
       method: "POST",
@@ -129,7 +132,8 @@ export default function Home() {
         session_id: sessionId,
         user_answer: Number(userAnswer),
         correct_answer: Number(problem.final_answer),
-        problem_text: problem.problem_text
+        problem_text: problem.problem_text,
+        user_identifier: userId, //this identifies who owns this record
       })
     });
 
@@ -151,7 +155,8 @@ export default function Home() {
       user_answer: Number(userAnswer),
       is_correct: data.is_correct,
       feedback_text: data.feedback_text,
-      problem_text: problem.problem_text
+      problem_text: problem.problem_text,
+      user_identifier: userId,
     };
     setIsHistory(prev => [...prev, newSubmission]);
 
@@ -328,14 +333,13 @@ const showHint = async (e: React.FormEvent) => {
           onClick={HandleClear}
           className="text-sm text-red-600 hover:underline focus:outline-none"
         >
-          {viewHistory ? 'Hide History' : 'View History'}
+          Clear History
         </button>
       </div>
 
       {/* Problem History */}
       <div className="bg-white rounded-lg shadow-inner p-4 max-h-48 overflow-y-auto">
         <h3 className="font-semibold text-gray-800 mb-2">🕒 Problem History</h3>
-        {viewHistory && (
           <ul className="space-y-1 text-gray-700 text-sm sm:text-base">
           {history?.map((item, index) => (
             <li key={index} className="flex justify-between">
@@ -345,7 +349,6 @@ const showHint = async (e: React.FormEvent) => {
             </li>
           ))}
         </ul>
-        )}
       </div>
     </div>
   </main>

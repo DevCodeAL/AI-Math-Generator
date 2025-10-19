@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { session_id, user_answer, correct_answer, problem_text } =
+    const { session_id, user_answer, correct_answer, problem_text, user_identifier } =
       await req.json();
 
     const is_correct = Number(user_answer) === Number(correct_answer);
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
            is_correct,
            feedback_text: feedback,
            problem_text,
+           user_identifier,
     };
 
 
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ session_id, user_answer, is_correct, feedback_text: feedback, problem_text, });
+    return NextResponse.json({ session_id, user_answer, is_correct, feedback_text: feedback, problem_text, user_identifier });
   } catch (error: any) {
     console.error("Error submitting answer:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
