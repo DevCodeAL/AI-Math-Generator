@@ -17,12 +17,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
-  // Optional Add
   const [showSolution, setShowSolution] = useState<boolean>(false);
   const [solutionSteps, setIsSolutionStep] = useState<string>("");
   const [history, setIsHistory] = useState<History[]>([]);
   const [score, setIsScore] = useState<number>(0);
-  const [allProblems, setIsAllProblems] = useState<number>(0)
+  const [viewHistory, setIsViewHistory] = useState<boolean>(false);
   const [difficulty, setDifficulty] = useState<string>("Easy");
   const [problemType, setProblemType] = useState<string>("Addition");
 
@@ -33,13 +32,10 @@ export default function Home() {
             const res = await fetch('/api/math-problem/history');
             const data = await res.json();
             if(data.submissions) {
-              const countAllProblems = data.submissions.map((items: History)=> items.problem_text).length;
               const countCorrect = data.submissions.filter((item: History)=> item.is_correct).length;
-              setIsAllProblems(countAllProblems);
               setIsScore(countCorrect)
               setIsHistory(data.submissions);
             }
-            console.log(data.submissions);
           } catch (error) {
               console.error(error);
           }
@@ -51,9 +47,7 @@ export default function Home() {
 
     // Handle Clear
     const HandleClear = ()=>{
-       setIsHistory([]);
-       setIsAllProblems(0);
-       setIsScore(0);
+         setIsViewHistory(!viewHistory);
     }
 
 
@@ -84,11 +78,10 @@ export default function Home() {
         correct_answer: Number(result.final_answer)
       }])
       .select()
-      .single(); //  get the single inserted row
+      .single();
 
     if (error) throw error;
 
-    // Set state with sessionId and problem
     setSessionId(data.id);
     setProblem({
       problem_text: data.problem_text,
@@ -136,13 +129,29 @@ export default function Home() {
       console.error("API error:", text);
       setIsLoading(false);
       return;
-    }
+    };
 
     const data = await res.json();
     setFeedback(data.feedback_text);
     setIsCorrect(data.is_correct);
     setIsLoading(false);
-    fetchHistory();
+
+     // Push new submission into history
+    const newSubmission: History = {
+      session_id: sessionId,
+      user_answer: Number(userAnswer),
+      is_correct: data.is_correct,
+      feedback_text: data.feedback_text,
+      problem_text: problem.problem_text
+    };
+    setIsHistory(prev => [...prev, newSubmission]);
+
+    setIsHistory(prev => [...prev, data]);
+
+     // Update score
+    if (data.is_correct) {
+      setIsScore(prev => prev + 1);
+    }
   } catch (error) {
     console.error(error);
     setIsLoading(false);
@@ -306,28 +315,30 @@ const showHint = async (e: React.FormEvent) => {
       )}
 
       <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg shadow-inner">
-        <span className="text-gray-700 font-medium">Score: {`${score}/${allProblems}`}
+        <span className="text-gray-700 font-medium">Score: {`${score}/${history.length}`}
         </span>
         <button
           onClick={HandleClear}
           className="text-sm text-red-600 hover:underline focus:outline-none"
         >
-          Clear History
+          {viewHistory ? 'Hide History' : 'View History'}
         </button>
       </div>
 
       {/* Problem History */}
       <div className="bg-white rounded-lg shadow-inner p-4 max-h-48 overflow-y-auto">
         <h3 className="font-semibold text-gray-800 mb-2">🕒 Problem History</h3>
-        <ul className="space-y-1 text-gray-700 text-sm sm:text-base">
+        {viewHistory && (
+          <ul className="space-y-1 text-gray-700 text-sm sm:text-base">
           {history?.map((item, index) => (
             <li key={index} className="flex justify-between">
               <span className='text-wrap p-1.5'>{item.problem_text}</span>
               <span className={`text-nowrap p-1.5 ${item.is_correct ? 'text-green-600' : 'text-red-600'}`}>
-                {item.is_correct ? `Correct ${item.user_answer}` :   `Wrong ${item.user_answer}`}</span>
+                {item.is_correct ? `Pass ${item.user_answer}` :   `Failed ${item.user_answer}`}</span>
             </li>
           ))}
         </ul>
+        )}
       </div>
     </div>
   </main>
