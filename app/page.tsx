@@ -340,15 +340,23 @@ const showHint = async (e: React.FormEvent) => {
       {/* Problem History */}
       <div className="bg-white rounded-lg shadow-inner p-4 max-h-48 overflow-y-auto">
         <h3 className="font-semibold text-gray-800 mb-2">🕒 Problem History</h3>
-          <ul className="space-y-1 text-gray-700 text-sm sm:text-base">
-          {history?.map((item, index) => (
-            <li key={index} className="flex justify-between">
-              <span className='text-wrap p-1.5'>{item.problem_text}</span>
-              <span className={`text-nowrap p-1.5 ${item.is_correct ? 'text-green-600' : 'text-red-600'}`}>
-                {item.is_correct ? `Pass ${item.user_answer}` :   `Failed ${item.user_answer}`}</span>
-            </li>
-          ))}
-        </ul>
+        {history.length === 0 ? (
+          <div className='flex justify-center items-center'>
+              <div className='text-gray-600 font-medium'>No history</div>
+          </div>
+        ) : (
+            <div>
+               <ul className="space-y-1 text-gray-700 text-sm sm:text-base">
+                {history?.map((item, index) => (
+                  <li key={index} className="flex justify-between">
+                    <span className='text-wrap p-1.5'>{item.problem_text}</span>
+                    <span className={`text-nowrap p-1.5 ${item.is_correct ? 'text-green-600' : 'text-red-600'}`}>
+                      {item.is_correct ? `Pass ${item.user_answer}` :   `Failed ${item.user_answer}`}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+         )}
       </div>
     </div>
   </main>
